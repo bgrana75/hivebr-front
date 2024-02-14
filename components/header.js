@@ -8,7 +8,8 @@ export default function Header () {
     const [user, setUser] = useState();
 
     function checkUser () {
-        let storedUser = JSON.parse(window.localStorage.getItem('user'));
+        let storedUser = window.localStorage.getItem('user');
+        if (storedUser) storedUser = JSON.parse(storedUser)
         setUser(storedUser)
         if (storedUser !== null) {
             // console.log("here");
