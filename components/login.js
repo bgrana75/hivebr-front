@@ -34,7 +34,7 @@ export default function Login ({ setUser }) {
                             let userInfo = JSON.stringify(val2[0])
                             window.localStorage.setItem('user', userInfo)
                             // console.log(JSON.stringify(val2[0], null, 4))
-                            setUser(userInfo)
+                            setUser(val2[0])
                             document.getElementById('login_modal').checked = false;
                             resolve(true)
                           }
