@@ -1,18 +1,17 @@
 'use client';
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Login from "@/components/login";
 import UserMenu from "@/components/usermenu";
 
 
-export default function Header () {
-    const [user, setUser] = useState();
+export default function Header ({ user, setUser }) {
 
     function checkUser () {
         let storedUser = window.localStorage.getItem('user');
         if (storedUser) storedUser = JSON.parse(storedUser)
         setUser(storedUser)
         if (storedUser !== null) {
-            // console.log("here");
+            //console.log("here");
             return true
         } 
         return false

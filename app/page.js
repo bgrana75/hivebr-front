@@ -1,12 +1,16 @@
+'use client';
+import { useState } from "react";
 import Header from "@/components/header";
-import BlogPosts from "@/components/blogposts";
+import PostList from "@/components/postlist";
 
 export default function Home() {
+  const [user, setUser] = useState();
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
-      <Header />
-      <div className="flex flex-grow w-full">
-        <BlogPosts />
+      <Header user={user} setUser={setUser} />
+      <div className="flex flex-wrap">
+        <PostList user={user} setUser={setUser} />
       </div>
     </main>
   );

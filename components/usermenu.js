@@ -6,12 +6,12 @@ export default function UserMenu ({ user, setUser }) {
     }
     return (
         <>
-            <div className="dropdown dropdown-end m-2">
-                <span>{user.name}</span>
+            <div className="dropdown dropdown-end m-2 text-sm font-bold">
+                <p>{user.name}</p>
             </div>
             <div className="dropdown dropdown-end">
                 <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                    <div className="w-10 rounded-full">
+                    <div className="w-8 rounded-full">
                         <img alt="Profile Picture" src={json_metadata.profile.profile_image} />
                     </div>
                 </div>
