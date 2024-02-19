@@ -1,0 +1,269 @@
+'use client';
+import { useState, useEffect } from "react";
+import Header from "@/components/header";
+import { Client } from '@hiveio/dhive';
+import { DefaultRenderer } from "@hiveio/content-renderer";
+//import Markdown from "react-markdown";
+//import remarkGfm from 'remark-gfm';
+//import rehypeRaw from 'rehype-raw';
+
+//let showdown  = require('showdown');
+//let converter = new showdown.Converter();
+
+const renderer = new DefaultRenderer({
+  baseUrl: "https://hive.blog/",
+  breaks: true,
+  skipSanitization: false,
+  allowInsecureScriptTags: false,
+  addNofollowToLinks: true,
+  doNotShowImages: false,
+  ipfsPrefix: "",
+  assetsWidth: 640,
+  assetsHeight: 480,
+  imageProxyFn: (url) => url,
+  usertagUrlFn: (account) => "/@" + account,
+  hashtagUrlFn: (hashtag) => "/trending/" + hashtag,
+  isLinkSafeFn: (url) => true,
+});
+
+export default function Page({ params }) {
+
+  const [user, setUser] = useState();
+  const [post, setPost] = useState();
+  const authorName = decodeURIComponent(params.slug[1]).replace("@", "");
+  const permlink = params.slug[2];
+  
+  function transformTextToHTML(inputText) {
+    // Function to replace Markdown syntax with HTML
+    function convertMarkdownToHTML(text) {
+        // Handle headers
+        text = text.replace(/(^|\n)(#{1,6})\s(.+?)(\n|$)/g, function (match, leading, hashes, content, trailing) {
+            var level = hashes.length;
+            return leading + '<h' + level + '>' + content.trim() + '</h' + level + '>' + trailing;
+        });
+
+        // Handle bold and italic
+        text = text.replace(/(\*\*|__)(.+?)\1/g, '<strong>$2</strong>');
+        text = text.replace(/(\*|_)(.+?)\1/g, '<em>$2</em>');
+
+        // Handle inline code
+        text = text.replace(/`(.+?)`/g, '<code>$1</code>');
+
+        // Handle tables
+        text = text.replace(/(?:\n\s*\|(.+)\|\s*\n)(\s*\|?\s*-+\s*\|?)(?:\n\s*\|(.+)\|\s*\n)?/g, function (match, header, separator, row) {
+            if (!row) {
+                return '<table><thead>' + convertTableLineToHTML(header) + '</thead><tbody></tbody></table>';
+            } else {
+                return '<table><thead>' + convertTableLineToHTML(header) + '</thead><tbody>' + convertTableLineToHTML(row) + '</tbody></table>';
+            }
+        });
+
+        // Handle paragraphs
+        text = '<p>' + text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+
+        return text;
+    }
+
+    // Function to convert a table line to HTML
+    function convertTableLineToHTML(line) {
+        var columns = line.trim().split('|').map(function (col) {
+            return col.trim();
+        });
+
+        return '<tr>' + columns.filter(Boolean).map(function (col) {
+            return '<td>' + col + '</td>';
+        }).join('') + '</tr>';
+    }
+
+    // Function to replace loose links and images with HTML tags
+    function convertLinksAndImagesToHTML(text) {
+      // Replace images
+      text = text.replace(/(https?:\/\/\S+\.(png|jpg|jpeg|gif|webp))/g, '<img src="$1" alt="Image">');
+  
+      // Replace links
+      text = text.replace(/(^|\s)(https?:\/\/\S+)(\s|$)/g, '$1<a href="$2" target="_blank">$2</a>$3');
+  
+      return text;
+  }
+
+    // Replace Markdown syntax with HTML
+    inputText = convertMarkdownToHTML(inputText);
+
+    // Replace loose links and images with HTML tags
+    inputText = convertLinksAndImagesToHTML(inputText);
+
+    return inputText;
+}
+
+  function replace3SpeakLinks (content) {
+    var regex = /\[!\[\]\((https:\/\/ipfs-3speak\.b-cdn\.net\/ipfs\/[a-zA-Z0-9]+\/)\)\]\((https:\/\/3speak\.tv\/watch\?v=([a-zA-Z0-9.-_]+\/[a-zA-Z0-9]+))\)/;
+    var match = content.match(regex);
+    if (match) {
+      var videoURL = match[2];
+      var videoId = match[3];
+      // const iframe = `<iframe src="https://3speak.tv/embed?v=${videoID}" ></iframe>`;
+      var iframeCode = `<div style="position: relative; width: 100%; padding-bottom: 56.25%;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://3speak.tv/embed?v=${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
+
+      content = content.replace(regex, iframeCode);
+    }
+    return content;
+  }
+
+  function replaceYouTubeLinks(text) {
+    // Regular expression to match YouTube video URLs
+    var youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/gi;
+
+    // Replace YouTube links with iframe within the specified div
+    var replacedText = text.replace(youtubeRegex, function (match, videoId) {
+        // Wrap the iframe code in a div with variable size
+        var iframeCode = `<div style="position: relative; width: 100%; padding-bottom: 56.25%;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
+
+
+        return iframeCode;
+    });
+
+    return replacedText;
+  }
+
+  function replaceImageLinks(text) {
+    // Regular expression to match image URLs
+    var imageRegex = /(https?:\/\/\S+\.(?:png|jpg|jpeg|gif|bmp|svg))/gi;
+
+    // Replace image links not within HTML tags
+    var replacedText = text.replace(imageRegex, function (match) {
+        // Check if the match is within an HTML tag
+        if (text.match(new RegExp(`<[^>]*${match}[^>]*>`))) {
+            // If within an HTML tag, return the original match
+            return match;
+        } else {
+            // If not within an HTML tag, replace with an HTML image tag
+            return `<img src="${match}" alt="Image">`;
+        }
+    });
+
+    return replacedText;
+}
+
+  function fixMarkdown(content) {
+        // fix no enter after start and end of center tag, where direct text follows
+      // <center>text -> <center>\n\ntext
+      content = content.replace(/<center>([^<])/g, '<center>\n\n$1');
+      // </center>text -> </center>\ntext
+      content = content.replace(/<\/center>([^<])/g, '</center>\n$1');
+
+      // if a closing tag has a new line after it, add another new line
+      // </tag>\n -> </tag>\n\n
+      content = content.replace(/<\/[^>]+>\n/g, (match) => match + '\n');
+
+      // look for two inline images, add a space before the first one so its on column 2
+      // only if the first one is not already on column 2 (has a space before it)
+      // ![name](url)![name](url) -> ' ![name](url)![name](url)'
+      const InlineRegex = /!\[[^\]]+\]\([^)]+\)!\[[^\]]+\]\([^)]+\)/g;
+      let matchInlines;
+      while ((matchInlines = InlineRegex.exec(content))) {
+        const [fullMatch] = matchInlines;
+
+        // make sure the letter before the link is not a ! or a space
+        const index = matchInlines.index;
+        const before = content[index - 1];
+        if (before === ')' || before === ' ') {
+          continue;
+        }
+
+        content = content.replace(fullMatch, ' ' + fullMatch);
+      }
+       // transform any links to embeds
+        // [name](url) -> <a href="url">name</a>
+        // but only if the url is not an image
+        // ![name](url) -> <img src="url" alt="name" />
+        const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+        let match;
+        while ((match = regex.exec(content))) {
+          const [fullMatch, name, url] = match;
+
+          // make sure the letter before the link is not a !
+          const index = match.index;
+          const before = content[index - 1];
+          if (before === '!') {
+            continue;
+          }
+
+          content = content.replace(fullMatch, `<a href="${url}">${name}</a>`);
+        }
+
+
+
+      return content;
+  }
+
+  function convertMarkdownToHTML(text) {
+    // Regular expression to match Markdown tables
+    const tableRegex = /\|(.+?)\|\s*\n\|( *[-:]+[-| :]*)\|\s*\n((?:\|.+?\|\s*\n)+)/gs;
+
+    // Replace Markdown tables with HTML divs
+    const htmlText = text.replace(tableRegex, (match, header, alignment, rows) => {
+        // Split the header, alignment, and rows
+        const headers = header.trim().split('|').map(cell => `<th class="border px-4 py-2">${cell.trim()}</th>`).join('');
+        const aligns = alignment.trim().split('|').map(cell => {
+            if (cell.includes(':')) {
+                if (cell.startsWith(':') && cell.endsWith(':')) return 'text-center';
+                if (cell.startsWith(':')) return 'text-left';
+                if (cell.endsWith(':')) return 'text-right';
+            }
+            return 'text-left';
+        }).join('');
+        const body = rows.trim().split('\n').map(row => {
+            const cells = row.trim().split('|').map(cell => `<td class="border px-4 py-2">${cell.trim()}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+        }).join('');
+
+        // Create the HTML div
+        return `<div class="table w-full mx-auto ${aligns}"><table class="w-full"><thead>${headers}</thead><tbody>${body}</tbody></table></div>`;
+    });
+
+    return htmlText;
+}
+
+  async function getPost () {
+    const dhiveClient = new Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network'])
+    let result = await dhiveClient.database.call('get_content', [authorName, permlink]);
+    
+    console.log(result.body);
+    result.body = renderer.render(result.body);
+//    result.body = replace3SpeakLinks(result.body);
+//    result.body = fixMarkdown(result.body)
+//    result.body = convertMarkdownToHTML(result.body)
+//    result.body = replaceImageLinks(result.body);
+
+//    result.body = converter.makeHtml(result.body);
+
+
+//    result.body = replaceYouTubeLinks(result.body);
+
+//      result.body = transformTextToHTML(result.body)
+//    console.log(result.body);
+    setPost(result);
+    return true;
+  }
+
+  useEffect(() => {
+    getPost()
+  }, []);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between">
+      <Header user={user} setUser={setUser} />
+      <div className="flex flex-wrap m-4">
+        <div className="hero min-h-screen bg-base-200">
+          <div className="hero-content text-sm">
+            <div className="max-w-2xl">
+              {post?.body}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+  
+}
