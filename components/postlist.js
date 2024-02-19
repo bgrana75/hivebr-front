@@ -15,7 +15,7 @@ export default function PostList ({ user }) {
         };
         const dhiveClient = new Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network'])
         await dhiveClient.database.getDiscussions(filter, query).then(result => {
-            // console.log('Response received:', result);
+            //console.log('Response received:', result);
             let index = 0;
             result = result.map((item, index) => ({ ...item, id: index + 1 }))
             setPosts(result);

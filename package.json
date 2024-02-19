@@ -9,10 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hiveio/content-renderer": "^1.1.1",
     "@hiveio/dhive": "^1.2.8",
     "next": "14.1.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-markdown": "^9.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "showdown": "^2.1.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",
