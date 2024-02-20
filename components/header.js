@@ -33,8 +33,8 @@ export default function Header ({ user, setUser }) {
 
                 <div className="flex-none">
                 <ul className="menu menu-horizontal px-1">
-                    <li><a>Proposals</a></li>
-                    <li><a>Swap</a></li>
+                    <li><a>link</a></li>
+                    <li><a>link</a></li>
                 </ul>
                 </div>
 

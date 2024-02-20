@@ -11,7 +11,7 @@ export default function PostList ({ user }) {
         const filter = "created";
         const query = {
             tag: "hivebr",
-            limit: 15,
+            limit: 30,
         };
         const dhiveClient = new Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network'])
         await dhiveClient.database.getDiscussions(filter, query).then(result => {

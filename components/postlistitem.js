@@ -1,5 +1,6 @@
 import VoteButton from "./votebutton";
 import { repCalc } from "@/lib/user";
+import { renderBody } from "@/lib/renderBody";
 
 export default function PostListItem ({ post, user }) {
 
@@ -10,11 +11,37 @@ export default function PostListItem ({ post, user }) {
     else if (json.images) image = json.images[0];
     else if (json.app == 'liketu') image = json.flow.pictures[0].url;
 
-    let shortBody = post.body.replace(/<\/?[^>]+(>|$)/g, ""); // remove html
-    shortBody = shortBody.replace(/!\[(.*?)\]\((.*?)\)/g, ""); // remove markdown image
-    shortBody = shortBody.replace(/\[([^\[\]]*)\]\((.*?)\)/gm, '$1'); // remove markdown link
-    shortBody = shortBody.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); //remove links
-    shortBody = shortBody.substring(0,200)
+    function getFirst20Words(text) {
+        // Remove Markdown tables
+        const withoutTables = text.replace(/\|(.+?)\|\s*\n\|( *[-:]+[-| :]*)\|\s*\n((?:\|.+?\|\s*\n)+)/gs, '');
+    
+        // Remove HTML tags
+        const plainText = withoutTables.replace(/<\/?[^>]+(>|$)/g, '');
+    
+        // Remove URLs (links and images), bold, and italic Markdown tags
+        const cleanedText = plainText
+            .replace(/\[.*?\]\(.*?\)/g, '')    // Remove links
+            .replace(/!\[.*?\]\(.*?\)/g, '')  // Remove images
+            .replace(/\*\*(.*?)\*\*/g, '$1')   // Remove bold
+            .replace(/\*(.*?)\*/g, '$1')       // Remove italic
+            .replace(/\b(?:https?|ftp):\/\/[^\s]+/gi, '') // Remove loose URLs
+            .trim();  // Trim leading and trailing whitespaces
+    
+        // Extract the first 20 words
+        const words = cleanedText.split(/\s+/).slice(0, 20);
+    
+        // Join the words back into a string
+        const result = words.join(' ');
+    
+        return result;
+    }
+
+    let shortBody = getFirst20Words(post.body);
+    //let shortBody = post.body.replace(/<\/?[^>]+(>|$)/g, ""); // remove html
+    //shortBody = shortBody.replace(/!\[(.*?)\]\((.*?)\)/g, ""); // remove markdown image
+    //shortBody = shortBody.replace(/\[([^\[\]]*)\]\((.*?)\)/gm, '$1'); // remove markdown link
+    //shortBody = shortBody.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); //remove links
+    //shortBody = shortBody.substring(0,200)
     //console.log(post)
     //console.log(json)
     return (
