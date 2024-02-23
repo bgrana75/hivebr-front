@@ -28,13 +28,13 @@ export default function Header ({ user, setUser }) {
         <>
             <div className="navbar bg-base-100">
                 <div className="navbar-start">
-                <a className="btn btn-ghost text-xl">MyBlog</a>
+                <a className="btn btn-ghost text-xl">HIVE-BR</a>
                 </div>
 
                 <div className="flex-none">
                 <ul className="menu menu-horizontal px-1">
-                    <li><a>link</a></li>
-                    <li><a>link</a></li>
+                    <li><a></a></li>
+                    <li><a></a></li>
                 </ul>
                 </div>
 
