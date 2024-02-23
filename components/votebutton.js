@@ -16,7 +16,7 @@ export default function VoteButton ({ user, post }) {
             return
         }
         window.hive_keychain.requestVote(user.name, post.permlink, post.author, (voteRangeValue*100), (response) => {
-            console.log(response);
+            //console.log(response);
           });
     }
 
